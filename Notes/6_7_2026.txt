@@ -1,0 +1,37 @@
+I wanted to make a notes folder so I can do some explaining as I walk through the process.
+
+Here is what I have done so far.
+
+1. I created a virtual environment to hold the project's code and dependencies
+
+2. I entered the virtual environment, and started it up.
+
+3. Once activated I pip install django
+
+4. now you can use django-admin startproject nameOfProject
+
+5. I created the project then cd into it (the folder containing manage.py)
+
+6. Then you can make your apps, python manage.py startapp appsName
+
+7. Now you can go configure your settings,
+
+    I used os.environ.get('DJANGO_SECRET_KEY'), and made a helper function to create a key incase a secret key is not found.
+
+    added the apps we created to the INSTALLED_APPS list
+
+    Every app gets it's own Static files and templates so I updated templates directory and made STATICFILES_DIRS so django can find them when we make them. (did not make them yet)
+
+    Added a path for MEDIA files so we can store images in development.
+
+8. Next I went to urls.py and imported:
+
+    from django.conf import settings  <-- to access variables in settings.py
+    from django.conf.urls.static import static <- to handle serving static files in development
+    from django.urls import path,include <- include is used to let django know you have a new app with a urls.py in it.
+
+    I added the paths to our menu and game1example.
+
+
+
+
