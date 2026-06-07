@@ -90,7 +90,11 @@ STATICFILES_DIRS=[
     # Notice that in production you will be using a provider like AWS. This is only to serve
     # your files while you edit and test them before pushing them to production.
 
-    BASE_DIR / 'menu' / 'static',
+    BASE_DIR / 'menu' / 'static' / 'javascript',
+    BASE_DIR / 'menu' / 'static' / 'stylingCSS',
+
+    BASE_DIR / 'game1example' / 'static' / 'javascript',
+    BASE_DIR / 'game1example' / 'static' / 'stylingCSS',
     BASE_DIR / 'game1example' / 'static',
 ]
 

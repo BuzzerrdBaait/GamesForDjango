@@ -33,5 +33,19 @@ Here is what I have done so far.
     I added the paths to our menu and game1example.
 
 
+9. Made a requirements.txt and ran pip freeze on cmd line, copied the output and pasted to requirements.txt
+    OUTPUT:
+        asgiref==3.11.1
+        Django==6.0.6
+        sqlparse==0.5.5
+        tzdata==2026.2
 
+10. Now that we have our project's settings and urls.py set up, we next go set up our apps
 
+    We have to add a urls.py. We have to create a templates and static folder for each.
+
+    I also go ahead and make the javascript and css files. We can switch to a framework later if you still want one.
+
+    
+
+     
