@@ -1,0 +1,9 @@
+1. I remembered we would need profileManagement so I am dropping in an existing profileManagement app so I don't have to build it again.
+
+2. Now we need to update settings which is just did, I updated installed apps, STATICFILES_DIRS, and the template directory.
+
+3. Now update the projects, urls.py to let it know about the new app's urls.
+
+4. I think we have everything ready to start getting our two apps created. We need a header (not sure what we are going to link to yet but we will need one eventually)
+   then extend the header in the menu's home.html template, also add link to a simple example game.
+   
