@@ -1,0 +1,103 @@
+{% comment %}
+   ─────────────────────────────────────────────────────────────────────────────
+   loginPage.html
+   ──────────────
+   Customer-facing login page.  Matches the storeFront colour theme.
+   On success the view redirects to ``?next`` or the store home page.
+   ─────────────────────────────────────────────────────────────────────────────
+{% endcomment %}
+<!DOCTYPE html>
+<html lang="en" data-theme="{% if user_theme and user_theme != 'forest' %}{{ user_theme }}{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In — Blazing Sugar Cookies</title>
+    {% load static %}
+    {% load i18n %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'base.css' %}">
+    <link rel="stylesheet" href="{% static 'profileManagement.css' %}">
+</head>
+<body>
+
+    {# ── Nav bar (matches storeFront) ── #}
+    <div class="header-wrapper">
+        <header>
+            <nav class="main-nav">
+                <div class="nav-left">
+                    <h1 class="site-title">ilovecookbooks</h1>
+                </div>
+                <div class="nav-center">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'profileManagement:userProfileHome' %}">{% trans "My Account" %}</a>
+                        <form method="post" action="{% url 'profileManagement:logoutUser' %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="logout-btn">{% trans "Logout" %}</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'profileManagement:register' %}">{% trans "Register" %}</a>
+                    {% endif %}
+                    <a href="{% url 'storeFront:storeHome' %}">{% trans "Store" %}</a>
+                    <a href="{% url 'ilovecookbooks:cookbook_list' %}">{% trans "Cookbooks" %}</a>
+                    <a href="{% url 'storeFront:faq' %}">{% trans "FAQ" %}</a>
+                    <a href="{% url 'storeFront:cart_detail' %}">{% trans "Cart" %}</a>
+                </div>
+            </nav>
+
+            <div class="category-nav-row">
+                {% if on_sale_products %}
+                    <a href="{% url 'storeFront:onSaleProducts' %}" class="category-nav-btn">{% trans "On Sale" %}</a>
+                {% endif %}
+                {% for category in category_links %}
+                    <a href="{% url 'storeFront:subCategories' category_name=category.name %}" class="category-nav-btn">
+                        {{ category.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </header>
+    </div>
+
+    {# ── Login card ── #}
+    <main class="pm-card-wrapper">
+        <div class="pm-card">
+            <h1>{% trans "Welcome Back" %}</h1>
+            <p class="pm-subtitle">{% trans "Sign in to your account" %}</p>
+
+            {% if error_message %}
+                <div class="pm-error">{{ error_message }}</div>
+            {% endif %}
+
+            <form method="post" class="pm-form" novalidate>
+                {% csrf_token %}
+
+                {# Preserve the ?next redirect target #}
+                {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
+
+                <div class="pm-field">
+                    <label for="username">{% trans "Username" %}</label>
+                    <input type="text" id="username" name="username" autocomplete="username"
+                           placeholder="{% trans 'Enter your username' %}" required autofocus>
+                </div>
+
+                <div class="pm-field">
+                    <label for="password">{% trans "Password" %}</label>
+                    <input type="password" id="password" name="password" autocomplete="current-password"
+                           placeholder="{% trans 'Enter your password' %}" required>
+                </div>
+
+                <button type="submit" class="pm-btn">{% trans "Log In" %}</button>
+            </form>
+
+            <div class="pm-footer-links">
+                <span>{% trans "Don't have an account?" %} <a href="{% url 'profileManagement:register' %}">{% trans "Register here" %}</a></span>
+                <a href="{% url 'passwordReset' %}">{% trans "Forgot your password?" %}</a>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

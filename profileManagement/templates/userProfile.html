@@ -1,0 +1,456 @@
+{% extends "ilovecookbooks/base.html" %}
+{% comment %}
+   ─────────────────────────────────────────────────────────────────────────────
+   userProfile.html
+   ────────────────
+   User profile, order history, and social (friends + messaging) hub.
+   ─────────────────────────────────────────────────────────────────────────────
+{% endcomment %}
+
+
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "My Profile" %} — Blazing Sugar Cookies{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'profileManagement.css' %}">
+{% endblock %}
+
+{% block content %}
+    <main class="pm-profile-wrapper">
+
+        {# ── Profile hero card ── #}
+        <div class="pm-profile-header">
+            <div class="pm-profile-hero">
+                <div class="pm-profile-avatar-lg">{{ user.username|first|upper }}</div>
+                <div class="pm-profile-meta">
+                    <h1>{{ user.username }}</h1>
+                    <p class="pm-profile-joined">{% blocktrans with date=user.date_joined|date:"F Y" %}Member since {{ date }}{% endblocktrans %}</p>
+                </div>
+
+                <div class="pm-live-clock">
+                    <div class="pm-clock-row">
+                        <span class="pm-clock-date" id="pm-clock-date">-- --</span>
+                        <span class="pm-clock-display" id="pm-clock-display">--:--</span>
+                    </div>
+                    <span class="pm-clock-tz" id="pm-clock-tz">{% trans "Local" %}</span>
+                </div>
+
+
+                
+                <div class="pm-profile-stats">
+                    <div class="pm-stat">
+                        <span class="pm-stat-num" id="pm-stat-friends">{{ friends|length }}</span>
+                        <span class="pm-stat-label">{% trans "Friends" %}</span>
+                    </div>
+
+                    {% if pending_count %}
+                    <div class="pm-stat pm-stat--alert">
+                        <span class="pm-stat-num">{{ pending_count }}</span>
+                        <span class="pm-stat-label">{% trans "Pending" %}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+
+            </div>
+        </div>
+
+        {% if user.is_authenticated %}
+
+            {# ── Page-level tab switcher ── #}
+            <div class="pm-tabs" role="tablist">
+                <button class="pm-tab pm-tab--active" data-tab="social" role="tab" aria-selected="true">
+                    {% trans "Friends &amp; Messages" %}
+                    {% if pending_count %}<span class="pm-tab-badge" id="pm-tab-friend-badge">{{ pending_count }}</span>{% endif %}
+                    <span class="pm-tab-badge pm-tab-badge--msg pm-tab-badge--hidden" id="pm-tab-msg-badge">0</span>
+                </button>
+                <button class="pm-tab" data-tab="orders" role="tab" aria-selected="false">{% trans "Orders" %}</button>
+                <button class="pm-tab" data-tab="options" role="tab" aria-selected="false">{% trans "Options" %}</button>
+            </div>
+
+            {# ════════════════════════════ ORDERS TAB ═══════════════════════ #}
+            <section class="pm-tab-panel" id="tab-orders">
+                <h2 class="pm-section-heading">{% trans "Your Orders" %}</h2>
+
+                {% if has_orders %}
+                    <div class="pm-table-scroll">
+                        <table class="pm-orders-table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Order #" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Items" %}</th>
+                                    <th>{% trans "Total" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                    <th class="pm-col-address">{% trans "Ship To" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order_data in orders_data %}
+                                <tr class="pm-order-row" data-target="order-detail-{{ order_data.order.pk }}">
+                                    <td>{{ order_data.order.paypal_order_id }}</td>
+                                    <td>{{ order_data.order.created_on|date:"SHORT_DATE_FORMAT" }}</td>
+                                    <td>{% blocktrans count n=order_data.items|length %}{{ n }} item{% plural %}{{ n }} items{% endblocktrans %}</td>
+                                    <td>${{ order_data.order.total_amount|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="pm-status pm-status-{{ order_data.order.status }}">
+                                            {{ order_data.order.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="pm-col-address">{{ order_data.order.shipping_city }}, {{ order_data.order.shipping_state }}</td>
+                                </tr>
+
+                                {# ── Expandable detail row ── #}
+                                <tr class="pm-order-detail" id="order-detail-{{ order_data.order.pk }}">
+                                    <td colspan="6">
+                                        <div class="pm-detail-inner">
+                                            <div class="pm-detail-items">
+                                                <h4>{% trans "Items" %}</h4>
+                                                <table class="pm-items-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>{% trans "Product" %}</th>
+                                                            <th>{% trans "Qty" %}</th>
+                                                            <th>{% trans "Subtotal" %}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for item in order_data.items %}
+                                                        <tr>
+                                                            <td>{{ item.name }}</td>
+                                                            <td>{{ item.quantity }}</td>
+                                                            <td>${{ item.line_total|floatformat:2 }}</td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <div class="pm-detail-shipping">
+                                                <h4>{% trans "Shipping" %}</h4>
+                                                <p><strong>{{ order_data.order.shipping_full_name }}</strong></p>
+                                                <p>{{ order_data.order.shipping_address_line1 }}</p>
+                                                <p>{{ order_data.order.shipping_city }}, {{ order_data.order.shipping_state }} {{ order_data.order.shipping_postal_code }}</p>
+                                                <p>{{ order_data.order.shipping_country_code }}</p>
+                                                {% if order_data.parcel_info %}
+                                                    <p class="pm-detail-method"><strong>{% trans "Method:" %}</strong> {{ order_data.order.get_shipping_option_display|default:"Standard" }}</p>
+                                                    {% for parcel in order_data.parcel_info %}
+                                                        <p>{% trans "Box" %} {{ forloop.counter }}: {{ parcel.weight_ounces|floatformat:2 }} oz</p>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                {% else %}
+                    <div class="pm-empty">
+                        <p>{% trans "You haven't placed any orders yet." %}</p>
+                        <a href="{% url 'storeFront:storeHome' %}" class="pm-btn">{% trans "Start Shopping" %}</a>
+                    </div>
+                {% endif %}
+            </section>
+
+            {# ════════════════════════════ SOCIAL TAB ═══════════════════════ #}
+            <section class="pm-tab-panel pm-tab-panel--active" id="tab-social">
+
+                <div class="pm-social-grid">
+
+                    {# ── Left column ── #}
+                    <div class="pm-social-col">
+
+                        {# Find Friends #}
+                        <div class="pm-social-card">
+                            <h3 class="pm-social-card-title">{% trans "Find Friends" %}</h3>
+                            <div class="pm-friend-search-wrap">
+                                <input id="pm-friend-search"
+                                       type="text"
+                                       class="pm-friend-search-input"
+                                       placeholder="{% trans 'Search by username…' %}"
+                                       autocomplete="off"
+                                       minlength="2">
+                            </div>
+                            <div id="pm-search-results" class="pm-search-results" aria-live="polite"></div>
+                        </div>
+
+                        {# Incoming Friend Requests #}
+                        <div class="pm-social-card">
+                            <h3 class="pm-social-card-title">
+                                {% trans "Friend Requests" %}
+                                <span id="pm-req-badge" class="pm-req-badge {% if not pending_count %}pm-req-badge--hidden{% endif %}">{{ pending_count }}</span>
+                            </h3>
+                            <ul id="pm-requests-list" class="pm-friend-list">
+                                {% for req in pending_requests %}
+                                <li class="pm-friend-item" data-request-id="{{ req.id }}" data-sender-id="{{ req.sender_id }}" data-sender-username="{{ req.sender_username }}">
+                                    <span class="pm-friend-avatar">{{ req.sender_username|first|upper }}</span>
+                                    <span class="pm-friend-name">{{ req.sender_username }}</span>
+                                    <div class="pm-friend-actions">
+                                        <button class="pm-btn-sm pm-btn-accept" data-request-id="{{ req.id }}" data-sender-id="{{ req.sender_id }}" data-sender-username="{{ req.sender_username }}">{% trans "Accept" %}</button>
+                                        <button class="pm-btn-sm pm-btn-decline" data-request-id="{{ req.id }}">{% trans "Decline" %}</button>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li class="pm-empty-note" id="pm-no-requests">{% trans "No pending requests." %}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                    </div>
+
+                    {# ── Right column ── #}
+                    <div class="pm-social-col">
+
+                        {# My Friends #}
+                        <div class="pm-social-card pm-social-card--friends">
+                            <h3 class="pm-social-card-title">{% trans "My Friends" %} <span id="pm-friend-count" class="pm-friend-count">{{ friends|length }}</span></h3>
+                            <ul id="pm-friends-list" class="pm-friend-list">
+                                {% for friend in friends %}
+                                <li class="pm-friend-item" data-friend-id="{{ friend.id }}" data-friend-username="{{ friend.username }}">
+                                    <span class="pm-friend-avatar">{{ friend.username|first|upper }}</span>
+                                    <span class="pm-friend-name">{{ friend.username }}</span>
+                                    <span class="pm-unread-dot pm-unread-dot--hidden" id="pm-unread-{{ friend.id }}"></span>
+                                    <div class="pm-friend-actions">
+                                        <button class="pm-btn-sm pm-btn-message" data-friend-id="{{ friend.id }}" data-friend-username="{{ friend.username }}">{% trans "Message" %}</button>
+                                        <button class="pm-btn-sm pm-btn-remove" data-friend-id="{{ friend.id }}" data-friend-username="{{ friend.username }}">{% trans "Remove" %}</button>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li class="pm-empty-note" id="pm-no-friends">{% trans "No friends yet — search above to add some!" %}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                    </div>
+
+                </div>{# /pm-social-grid #}
+
+            </section>{# /tab-social #}
+
+            {# ══════════════════════════ OPTIONS TAB ══════════════════════════ #}
+            <section class="pm-tab-panel" id="tab-options">
+                <h2 class="pm-section-heading">{% trans "Your Options" %}</h2>
+                <div class="pm-options-grid">
+
+                    {# Timezone picker #}
+                    <div class="pm-options-card">
+                        <h3 class="pm-options-heading">{% trans "Timezone" %}</h3>
+                        <select id="pm-options-tz" class="pm-options-tz">
+                            <option value="local">{% trans "Local (browser time)" %}</option>
+                            <optgroup label="Americas">
+                                <option value="America/New_York">Eastern (ET)</option>
+                                <option value="America/Chicago">Central (CT)</option>
+                                <option value="America/Denver">Mountain (MT)</option>
+                                <option value="America/Los_Angeles">Pacific (PT)</option>
+                                <option value="America/Anchorage">Alaska (AKT)</option>
+                                <option value="Pacific/Honolulu">Hawaii (HT)</option>
+                            </optgroup>
+                            <optgroup label="UTC / Europe">
+                                <option value="UTC">UTC</option>
+                                <option value="Europe/London">London (GMT/BST)</option>
+                                <option value="Europe/Paris">Central Europe (CET)</option>
+                                <option value="Europe/Moscow">Moscow (MSK)</option>
+                            </optgroup>
+                            <optgroup label="Asia / Pacific">
+                                <option value="Asia/Dubai">Dubai (GST)</option>
+                                <option value="Asia/Kolkata">India (IST)</option>
+                                <option value="Asia/Shanghai">China (CST)</option>
+                                <option value="Asia/Tokyo">Japan (JST)</option>
+                                <option value="Australia/Sydney">Sydney (AEST)</option>
+                                <option value="Pacific/Auckland">Auckland (NZST)</option>
+                            </optgroup>
+                        </select>
+                        <p class="pm-options-save-note">{% trans "Affects the live clock and all message timestamps." %}</p>
+                    </div>
+
+                    {# Time format picker #}
+                    <div class="pm-options-card">
+                        <h3 class="pm-options-heading">{% trans "Time Format" %}</h3>
+                        <div class="pm-time-format-btns">
+                            <button class="pm-time-format-btn" data-fmt="24h">{% trans "24-hour" %} <span class="pm-fmt-example">14:30</span></button>
+                            <button class="pm-time-format-btn" data-fmt="12h">{% trans "12-hour" %} <span class="pm-fmt-example">2:30 PM</span></button>
+                        </div>
+                        <p class="pm-options-save-note">{% trans "Applies to the live clock and all chat timestamps." %}</p>
+                    </div>
+
+                    {# Color theme picker #}
+                    <div class="pm-options-card">
+                        <h3 class="pm-options-heading">{% trans "Color Theme" %}</h3>
+                        <div class="pm-theme-swatches">
+                            <button class="pm-theme-swatch" data-theme="forest" title="Forest">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #1a1a1a 40%, #217346)"></span>
+                                Forest
+                            </button>
+                            <button class="pm-theme-swatch" data-theme="midnight" title="Midnight">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #080c14 40%, #3b82f6)"></span>
+                                Midnight
+                            </button>
+                            <button class="pm-theme-swatch" data-theme="ember" title="Ember">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #120a04 40%, #ea580c)"></span>
+                                Ember
+                            </button>
+                            <button class="pm-theme-swatch" data-theme="ocean" title="Ocean">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #030f12 40%, #0e9f6e)"></span>
+                                Ocean
+                            </button>
+                            <button class="pm-theme-swatch" data-theme="light" title="Light">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #f4f7f4 40%, #217346)"></span>
+                                Light
+                            </button>
+                            <button class="pm-theme-swatch" data-theme="rose" title="Rose Petal">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #1b0a13 40%, #ff4d8d)"></span>
+                                Rose Petal
+                            </button>
+                            <button class="pm-theme-swatch" data-theme="blush" title="Blush">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #2a1415 40%, #ff8a80)"></span>
+                                Blush
+                            </button>
+                            <button class="pm-theme-swatch" data-theme="pearl" title="Pearl">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #f9f3ef 40%, #d0667a)"></span>
+                                Pearl
+                            </button>
+                            <button class="pm-theme-swatch" data-theme="hxxr" title="Green HXXR">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #020c02 40%, #00ff41)"></span>
+                                HXXR
+                            </button>
+                            <button class="pm-theme-swatch" data-theme="win98" title="Windows 98">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #008080 40%, #000080)"></span>
+                                Win 98
+                            </button>
+                            <button class="pm-theme-swatch" data-theme="doom" title="DOOM">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #0d0300 40%, #c0392b)"></span>
+                                DOOM
+                            </button>
+                            <button class="pm-theme-swatch" data-theme="halo3" title="Halo 3">
+                                <span class="pm-swatch-circle" style="background: linear-gradient(135deg, #070f18 40%, #00b4ff)"></span>
+                                Halo 3
+                            </button>
+                        </div>
+                    </div>
+
+                    {# Language picker #}
+                    <div class="pm-options-card">
+                        <h3 class="pm-options-heading">{% trans "Language" %}</h3>
+                        <div class="pm-lang-btns" id="pm-lang-btns">
+                            <button class="pm-lang-btn" data-lang="en">&#127482;&#127480; English</button>
+                            <button class="pm-lang-btn" data-lang="es">&#127466;&#127480; Espa&ntilde;ol</button>
+                            <button class="pm-lang-btn" data-lang="fr">&#127467;&#127479; Fran&ccedil;ais</button>
+                            <button class="pm-lang-btn" data-lang="de">&#127465;&#127466; Deutsch</button>
+                            <button class="pm-lang-btn" data-lang="pt">&#127463;&#127479; Portugu&ecirc;s</button>
+                            <button class="pm-lang-btn" data-lang="ja">&#127471;&#127477; &#26085;&#26412;&#35486;</button>
+                            <button class="pm-lang-btn" data-lang="zh-hans">&#127464;&#127475; &#20013;&#25991;</button>
+                            <button class="pm-lang-btn" data-lang="ar">&#127462;&#127466; &#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;</button>
+                        </div>
+                        <p class="pm-options-save-note">{% trans "Changing language reloads the page." %}</p>
+                    </div>
+
+                </div>
+            </section>{# /tab-options #}
+
+        {% else %}
+            <div class="pm-empty">
+                <p>{% trans "Please log in to view your profile and orders." %}</p>
+                <a href="{% url 'profileManagement:loginUser' %}" class="pm-btn">{% trans "Log In" %}</a>
+            </div>
+        {% endif %}
+
+    </main>
+
+    {# ════════════════════════════ CHAT PANEL ════════════════════════════════ #}
+    <div id="pm-chat-panel" class="pm-chat-panel" aria-hidden="true">
+        <div class="pm-chat-header">
+            <span id="pm-chat-title" class="pm-chat-title">{% trans "Chat" %}</span>
+            <select id="pm-chat-tz" class="pm-chat-tz" title="{% trans 'Display timezone' %}">
+                <option value="local">{% trans "Local" %}</option>
+                <optgroup label="Americas">
+                    <option value="America/New_York">Eastern (ET)</option>
+                    <option value="America/Chicago">Central (CT)</option>
+                    <option value="America/Denver">Mountain (MT)</option>
+                    <option value="America/Los_Angeles">Pacific (PT)</option>
+                    <option value="America/Anchorage">Alaska (AKT)</option>
+                    <option value="Pacific/Honolulu">Hawaii (HT)</option>
+                </optgroup>
+                <optgroup label="UTC / Europe">
+                    <option value="UTC">UTC</option>
+                    <option value="Europe/London">London (GMT/BST)</option>
+                    <option value="Europe/Paris">Central Europe (CET)</option>
+                    <option value="Europe/Moscow">Moscow (MSK)</option>
+                </optgroup>
+                <optgroup label="Asia / Pacific">
+                    <option value="Asia/Dubai">Dubai (GST)</option>
+                    <option value="Asia/Kolkata">India (IST)</option>
+                    <option value="Asia/Shanghai">China (CST)</option>
+                    <option value="Asia/Tokyo">Japan (JST)</option>
+                    <option value="Australia/Sydney">Sydney (AEST)</option>
+                    <option value="Pacific/Auckland">Auckland (NZST)</option>
+                </optgroup>
+            </select>
+            <button id="pm-chat-close" class="pm-chat-close" aria-label="{% trans 'Close chat' %}">&times;</button>
+        </div>
+        <div id="pm-chat-messages" class="pm-chat-messages"></div>
+        <form id="pm-chat-form" class="pm-chat-form" novalidate>
+            <input id="pm-chat-input" type="text" class="pm-chat-input" placeholder="{% trans 'Type a message…' %}" autocomplete="off" maxlength="2000">
+            <button type="submit" class="pm-chat-send">{% trans "Send" %}</button>
+        </form>
+    </div>
+    <div id="pm-chat-overlay" class="pm-chat-overlay"></div>
+
+    {# ── Inline data for JS ── #}
+
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        const PM_URLS = {
+            searchUsers:   "{% url 'profileManagement:search_users' %}",
+            sendRequest:   "{% url 'profileManagement:send_friend_request' %}",
+            removeFriend:  "/friends/remove/",   // + user_id + /
+            respondRequest: "/friends/request/", // + request_id + /respond/
+            getMessages:   "/messages/",          // + user_id + /
+            sendMessage:   "{% url 'profileManagement:send_message' %}",
+            getUnreadCount: "{% url 'profileManagement:get_unread_count' %}",
+            saveOptions:   "{% url 'profileManagement:save_options' %}",
+        };
+        const PM_CURRENT_USER_ID = {{ user.pk }};
+        const CSRF_TOKEN = "{{ csrf_token }}";
+        const PM_USER_TIMEZONE    = "{{ user_timezone }}";
+        const PM_USER_THEME        = "{{ user_theme }}";
+        const PM_USER_TIME_FORMAT  = "{{ user_time_format }}";
+        const PM_USER_LANGUAGE     = "{{ user_language }}";
+        const PM_I18N = {
+            local: "{% trans 'Local' %}",
+            minCharsHint: "{% trans 'Type at least 2 characters…' %}",
+            searching: "{% trans 'Searching…' %}",
+            searchFailed: "{% trans 'Search failed — please try again.' %}",
+            noUsersFound: "{% trans 'No users found.' %}",
+            friendsLabel: "{% trans 'Friends' %} ✓",
+            pendingLabel: "{% trans 'Pending' %}…",
+            addFriend: "{% trans 'Add Friend' %}",
+            sending: "{% trans 'Sending…' %}",
+            friendRequestSent: "{% trans 'Friend request sent to {username}!' %}",
+            couldNotSendRequest: "{% trans 'Could not send request.' %}",
+            networkErrorRetry: "{% trans 'Network error — please try again.' %}",
+            noPendingRequests: "{% trans 'No pending requests.' %}",
+            nowFriends: "{% trans 'You and {username} are now friends!' %}",
+            requestDeclined: "{% trans 'Request declined.' %}",
+            actionFailed: "{% trans 'Action failed.' %}",
+            networkError: "{% trans 'Network error.' %}",
+            message: "{% trans 'Message' %}",
+            remove: "{% trans 'Remove' %}",
+            confirmRemoveFriend: "{% trans 'Remove {username} as a friend?' %}",
+            noFriendsYet: "{% trans 'No friends yet — search above to add some!' %}",
+            friendRemoved: "{% trans '{username} removed.' %}",
+            couldNotRemoveFriend: "{% trans 'Could not remove friend.' %}",
+            chatWith: "{% trans 'Chat with {username}' %}",
+            noMessagesYet: "{% trans 'No messages yet — say hello!' %}",
+            couldNotSendMessage: "{% trans 'Could not send message.' %}"
+        };
+    </script>
+
+    <script src="{% static 'profileManagement.js' %}"></script>
+{% endblock %}
