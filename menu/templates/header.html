@@ -13,14 +13,19 @@
     <title>Home</title>
 </head>
 <body>
+
+    <h1> Lets build some games!</h1>
     <nav>
         <ul>
-            <li><a href="{% url 'menu' %}">Home</a></li>
-            <li><a href="{% url 'game1example' %}">Game 1 Example</a></li>
+            <li><a href="{% url 'menu:menu' %}">Home</a></li>
+            <li><a href="{% url 'game1example:game1example' %}">Game 1 Example</a></li>
+
+            
+            <li><a href="{% url 'profileManagement:userProfileHome' %}">Profile Management</a></li>
             <!-- Add more links to other pages here -->
         </ul>
     </nav>
-    
+
 {% block content %}{% endblock %}
 </body>
 </html>

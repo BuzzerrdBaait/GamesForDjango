@@ -409,9 +409,9 @@
         const PM_URLS = {
             searchUsers:   "{% url 'profileManagement:search_users' %}",
             sendRequest:   "{% url 'profileManagement:send_friend_request' %}",
-            removeFriend:  "/friends/remove/",   // + user_id + /
-            respondRequest: "/friends/request/", // + request_id + /respond/
-            getMessages:   "/messages/",          // + user_id + /
+            removeFriend:  "/profileManagement/friends/remove/",   // + user_id + /
+            respondRequest: "/profileManagement/friends/request/", // + request_id + /respond/
+            getMessages:   "/profileManagement/messages/",          // + user_id + /
             sendMessage:   "{% url 'profileManagement:send_message' %}",
             getUnreadCount: "{% url 'profileManagement:get_unread_count' %}",
             saveOptions:   "{% url 'profileManagement:save_options' %}",

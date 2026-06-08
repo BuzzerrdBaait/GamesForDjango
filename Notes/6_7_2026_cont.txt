@@ -6,4 +6,8 @@
 
 4. I think we have everything ready to start getting our two apps created. We need a header (not sure what we are going to link to yet but we will need one eventually)
    then extend the header in the menu's home.html template, also add link to a simple example game.
-   
+
+5. I went and made somewhat empty html and linked the javascript and css into the files.
+
+6. I started struggling with some url collisions but got it worked out. There was some minor stuff here and there I had to fix that I can't remember.
+

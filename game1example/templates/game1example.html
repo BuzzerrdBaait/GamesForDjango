@@ -1,0 +1,12 @@
+{% extends 'header.html' %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'game1exampleCSS.css' %}">
+<script src="{% static 'game1example.js' %}"></script>
+
+<section>
+    <h2>{{ greeting }}</h2>
+</section>
+
+{% endblock %}

@@ -23,11 +23,12 @@ from django.conf.urls.static import static
 from django.urls import include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    
-    path('', include('menu.urls')),
-    path('game1example/', include('game1example.urls')),
 
-    path('profileManagement/', include('profileManagement.urls')),
+    path('admin/', admin.site.urls),
+    path('', include(('menu.urls', 'menu'), namespace='menu')),
+    path('game1example/', include(('game1example.urls', 'game1example'), namespace='game1example')),
+    path('profileManagement/', include(('profileManagement.urls', 'profileManagement'), namespace='profileManagement')),
+
+    
 
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
