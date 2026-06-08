@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'menu',
     'game1example',
+    'profileManagement'
 
 ]
 
@@ -72,6 +73,7 @@ TEMPLATES = [
             # This is where you let django know to add more template directories, each app get's their own.
             BASE_DIR / 'menu' / 'templates',
             BASE_DIR / 'game1example' / 'templates',
+            BASE_DIR / 'profileManagement' / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -95,7 +97,9 @@ STATICFILES_DIRS=[
 
     BASE_DIR / 'game1example' / 'static' / 'javascript',
     BASE_DIR / 'game1example' / 'static' / 'stylingCSS',
-    BASE_DIR / 'game1example' / 'static',
+
+    BASE_DIR / 'profileManagement' / 'static' / 'javascript',
+    BASE_DIR / 'profileManagement' / 'static' / 'stylingCSS',
 ]
 
 
