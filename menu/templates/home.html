@@ -1,1 +1,14 @@
-ECHO is on.
+{% extends 'menu/header.html' %}
+{% block content %}
+
+<!-- Links to CSS and JavaScript -->
+<link rel="stylesheet" href="{% static 'home.css' %}">
+<script src="{% static 'home.js' %}"></script>
+
+
+<body>
+    <h1>{{ greeting }}</h1>
+</body>
+</html>
+
+{% endblock %}

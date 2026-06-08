@@ -29,5 +29,5 @@ urlpatterns = [
     path('game1example/', include('game1example.urls')),
 
     path('profileManagement/', include('profileManagement.urls')),
-    
+
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
