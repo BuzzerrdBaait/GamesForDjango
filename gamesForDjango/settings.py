@@ -100,8 +100,8 @@ STATICFILES_DIRS=[
     BASE_DIR / 'game1example' / 'static' / 'javascript',
     BASE_DIR / 'game1example' / 'static' / 'stylingCSS',
 
-    BASE_DIR / 'profileManagement' / 'static' / 'javascript',
-    BASE_DIR / 'profileManagement' / 'static' / 'stylingCSS',
+    BASE_DIR / 'profileManagement' / 'static',
+
 ]
 
 
